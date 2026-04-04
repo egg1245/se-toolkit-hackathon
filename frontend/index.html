@@ -47,6 +47,7 @@
             to { transform: rotate(360deg); }
         }
     </style>
+    <script src="translations.js"></script>
 </head>
 <body class="bg-gradient-to-br from-orange-50 to-yellow-50">
     <div class="min-h-screen flex flex-col">
@@ -54,16 +55,25 @@
         <header class="bg-gradient-to-r from-orange-500 to-yellow-500 text-white shadow-lg">
             <div class="max-w-4xl mx-auto px-4 py-6 flex justify-between items-center">
                 <div>
-                    <h1 class="text-4xl font-bold">🍳 DormChef</h1>
-                    <p class="text-orange-100 mt-2">Generate personalized recipes with your ingredients and appliances</p>
+                    <h1 class="text-4xl font-bold" data-i18n="title">🍳 DormChef</h1>
+                    <p class="text-orange-100 mt-2" data-i18n="subtitle">Generate personalized recipes with your ingredients and appliances</p>
                 </div>
-                <button 
-                    id="themeToggle" 
-                    class="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-4 py-2 rounded-lg transition font-semibold text-lg"
-                    title="Toggle dark/light mode"
-                >
-                    🌙
-                </button>
+                <div class="flex gap-2">
+                    <button 
+                        id="languageToggle" 
+                        class="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-4 py-2 rounded-lg transition font-semibold text-lg"
+                        title="RU/EN"
+                    >
+                        🌍 EN
+                    </button>
+                    <button 
+                        id="themeToggle" 
+                        class="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-4 py-2 rounded-lg transition font-semibold text-lg"
+                        title="Toggle dark/light mode"
+                    >
+                        🌙
+                    </button>
+                </div>
             </div>
         </header>
 
@@ -415,6 +425,7 @@
         const historyContainer = document.getElementById('historyContainer');
         const noHistoryMsg = document.getElementById('noHistoryMsg');
         const themeToggle = document.getElementById('themeToggle');
+        const languageToggle = document.getElementById('languageToggle');
         const selectedAppliances = new Set();
 
         // DOM Elements - Appliances Management
@@ -441,11 +452,46 @@
         generateBtn.addEventListener('click', generateRecipe);
         document.getElementById('saveRecipeBtn').addEventListener('click', copyRecipe);
         themeToggle.addEventListener('click', toggleTheme);
+        languageToggle.addEventListener('click', toggleLanguage);
 
         // Event Listeners - Tabs
         tabButtons.forEach(btn => {
             btn.addEventListener('click', switchTab);
         });
+
+        // ===== THEME MANAGEMENT =====
+
+        // Toggle Language
+        function toggleLanguage() {
+            const currentLang = getCurrentLanguage();
+            const newLang = currentLang === 'en' ? 'ru' : 'en';
+            setLanguage(newLang);
+            updateUILanguage();
+        }
+
+        // Update UI Language
+        function updateUILanguage() {
+            const currentLang = getCurrentLanguage();
+            languageToggle.textContent = currentLang === 'en' ? '🌍 RU' : '🌍 EN';
+            
+            // Update all elements with data-i18n attribute
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                el.textContent = t(key);
+            });
+
+            // Update input placeholders and labels
+            const ingredientsLabel = document.querySelector('label:has(~ textarea#ingredientsInput)');
+            if (ingredientsLabel) ingredientsLabel.textContent = t('ingredientsLabel');
+            document.getElementById('ingredientsInput').placeholder = t('ingredientsPlaceholder');
+
+            const appliancesLabel = Array.from(document.querySelectorAll('label')).find(l => l.textContent.includes('Kitchen Appliances') || l.textContent.includes('Кухонные'));
+            if (appliancesLabel) appliancesLabel.textContent = t('appliancesLabel');
+            
+            // Update button texts
+            generateBtn.textContent = t('generateBtn');
+            document.getElementById('saveRecipeBtn').textContent = t('saveRecipe');
+        }
 
         // ===== THEME MANAGEMENT =====
 
@@ -857,6 +903,7 @@
         // Initialize on page load
         async function initializePage() {
             applyTheme();
+            updateUILanguage();
             await loadAppliances();
             loadHistory();
         }
