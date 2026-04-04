@@ -65,12 +65,23 @@ async def generate_recipe(
         if not request.ingredients or len(request.ingredients) == 0:
             raise HTTPException(status_code=400, detail="At least one ingredient required")
         
-        if not request.appliance or len(request.appliance.strip()) == 0:
-            raise HTTPException(status_code=400, detail="Appliance is required")
+        if not request.appliance_ids or len(request.appliance_ids) == 0:
+            raise HTTPException(status_code=400, detail="At least one appliance required")
+
+        # Get appliances from DB
+        result = await db.execute(select(Appliance).where(Appliance.id.in_(request.appliance_ids)))
+        appliances = result.scalars().all()
+        
+        if len(appliances) != len(request.appliance_ids):
+            raise HTTPException(status_code=400, detail="One or more appliances not found")
+        
+        # Format appliances for LLM
+        appliance_names = [a.name for a in appliances]
+        appliance_str = ", ".join(appliance_names)
 
         # Call LLM service
-        logger.info(f"Generating recipe with {len(request.ingredients)} ingredients, appliance: {request.appliance}")
-        recipe_content = await llm_service.generate(request.ingredients, request.appliance)
+        logger.info(f"Generating recipe with {len(request.ingredients)} ingredients, appliances: {appliance_str}")
+        recipe_content = await llm_service.generate(request.ingredients, appliance_str)
 
         # Validate LLM response
         if not recipe_content or not isinstance(recipe_content, dict):
@@ -79,10 +90,10 @@ async def generate_recipe(
         # Create Recipe DB record
         recipe_db = Recipe(
             ingredients=request.ingredients,
-            appliance=request.appliance,
             content=recipe_content,
         )
-
+        recipe_db.appliances = appliances
+        
         db.add(recipe_db)
         await db.commit()
         await db.refresh(recipe_db)
@@ -93,7 +104,7 @@ async def generate_recipe(
         response = RecipeResponse(
             id=recipe_db.id,
             ingredients=recipe_db.ingredients,
-            appliance=recipe_db.appliance,
+            appliances=[ApplianceResponse.from_orm(a) for a in recipe_db.appliances],
             content=RecipeContent(**recipe_content),
             created_at=recipe_db.created_at,
         )
