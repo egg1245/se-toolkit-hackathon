@@ -15,6 +15,12 @@ fi
 PYTHON_VERSION=$(python3 --version | cut -d' ' -f2 | cut -d'.' -f1,2)
 echo "✓ Python $PYTHON_VERSION found"
 
+# Check if venv module is available, install if not
+if ! python3 -m venv --help &> /dev/null; then
+    echo "📦 Installing python3-venv..."
+    apt-get update -qq && apt-get install -y python3-venv > /dev/null 2>&1
+fi
+
 # Create virtual environment
 if [ ! -d "venv" ]; then
     echo "📦 Creating virtual environment..."
