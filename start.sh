@@ -44,8 +44,14 @@ if ! docker ps | grep -q dormchef-db; then
         -p 5432:5432 \
         postgres:16-alpine
     
-    echo "⏳ Waiting for PostgreSQL to be ready..."
-    sleep 10
+    echo "⏳ Waiting for PostgreSQL..."
+    for i in {1..30}; do
+        if docker exec dormchef-db pg_isready -U dormchef &>/dev/null; then
+            echo -e "${GREEN}✓ PostgreSQL ready${NC}"
+            break
+        fi
+        [ $i -eq 30 ] && echo "PostgreSQL startup timeout" && exit 1
+    done
 else
     echo -e "${GREEN}✓ PostgreSQL already running${NC}"
 fi
