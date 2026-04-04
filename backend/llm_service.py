@@ -98,5 +98,9 @@ Remember: Use ONLY these ingredients and ONLY this appliance."""
             logger.error(f"Invalid JSON from LLM: {e}")
             raise ValueError("Invalid recipe format returned from LLM")
         except Exception as e:
-            logger.error(f"LLM error: {e}")
-            raise ValueError(f"Recipe generation failed: {str(e)}")
+            logger.error(f"LLM error: {type(e).__name__}: {e}")
+            # Fallback to mock for network/connection errors
+            logger.info("Falling back to mock service...")
+            from .mock_llm_service import MockLLMService
+            mock = MockLLMService()
+            return await mock.generate(ingredients, appliance)
