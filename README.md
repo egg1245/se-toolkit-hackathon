@@ -95,6 +95,17 @@ curl http://localhost:8000/health
 
 ## Deployment
 
+### Quick Start (Recommended for Ubuntu 24.04)
+
+**One-command setup:**
+```bash
+git clone https://github.com/egg1245/Lab9.git se-toolkit-hackathon
+cd se-toolkit-hackathon
+bash setup.sh        # Install dependencies
+bash start.sh        # Start services
+# In another terminal: bash test.sh
+```
+
 ### Requirements
 - Ubuntu 24.04 LTS
 - Docker & Docker Compose installed
