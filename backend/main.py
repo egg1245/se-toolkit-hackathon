@@ -4,15 +4,15 @@ from fastapi.responses import FileResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, desc
 
-from models import RecipeRequest, RecipeResponse, RecipeContent
-from database import init_db, close_db, get_db, Recipe
+from .models import RecipeRequest, RecipeResponse, RecipeContent
+from .database import init_db, close_db, get_db, Recipe
 
 # Try to import real LLM service, fallback to mock
 try:
-    from llm_service import LLMService
+    from .llm_service import LLMService
     LLM_AVAILABLE = True
 except Exception:
-    from mock_llm_service import MockLLMService as LLMService
+    from .mock_llm_service import MockLLMService as LLMService
     LLM_AVAILABLE = False
 
 # Configure logging

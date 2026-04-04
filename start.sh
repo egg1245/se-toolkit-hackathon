@@ -52,5 +52,4 @@ fi
 
 # Start FastAPI backend
 echo -e "${BLUE}🚀 Starting FastAPI backend on http://localhost:8000...${NC}"
-cd backend
-../venv/bin/python -m uvicorn main:app --host 0.0.0.0 --port 8000
+venv/bin/python -m uvicorn backend.main:app --host 0.0.0.0 --port 8000
