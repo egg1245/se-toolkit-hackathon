@@ -1,0 +1,159 @@
+import os
+import logging
+from fastapi import FastAPI, Depends, HTTPException
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, desc
+import json
+
+from models import RecipeRequest, RecipeResponse, RecipeContent
+from database import init_db, close_db, get_db, Recipe
+from llm_service import LLMService
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Initialize FastAPI app
+app = FastAPI(
+    title="DormChef API",
+    description="Generate personalized recipes based on ingredients and appliances",
+    version="1.0.0",
+)
+
+# Initialize LLM service
+llm_service = LLMService()
+
+
+@app.on_event("startup")
+async def startup():
+    """Initialize database on startup"""
+    await init_db()
+    logger.info("DormChef backend started")
+
+
+@app.on_event("shutdown")
+async def shutdown():
+    """Close database on shutdown"""
+    await close_db()
+    logger.info("DormChef backend shutdown")
+
+
+@app.post("/api/generate", response_model=RecipeResponse)
+async def generate_recipe(
+    request: RecipeRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Generate a recipe based on ingredients and appliance.
+    
+    Args:
+        request: RecipeRequest with ingredients list and appliance
+        db: Database session
+        
+    Returns:
+        RecipeResponse with generated recipe and ID
+    """
+    try:
+        # Validate input
+        if not request.ingredients or len(request.ingredients) == 0:
+            raise HTTPException(status_code=400, detail="At least one ingredient required")
+        
+        if not request.appliance or len(request.appliance.strip()) == 0:
+            raise HTTPException(status_code=400, detail="Appliance is required")
+
+        # Call LLM service
+        logger.info(f"Generating recipe with {len(request.ingredients)} ingredients, appliance: {request.appliance}")
+        recipe_content = await llm_service.generate(request.ingredients, request.appliance)
+
+        # Validate LLM response
+        if not recipe_content or not isinstance(recipe_content, dict):
+            raise HTTPException(status_code=500, detail="Invalid recipe format")
+
+        # Create Recipe DB record
+        recipe_db = Recipe(
+            ingredients=request.ingredients,
+            appliance=request.appliance,
+            content=recipe_content,
+        )
+
+        db.add(recipe_db)
+        await db.commit()
+        await db.refresh(recipe_db)
+
+        logger.info(f"Recipe saved with ID: {recipe_db.id}")
+
+        # Convert to response model
+        response = RecipeResponse(
+            id=recipe_db.id,
+            ingredients=recipe_db.ingredients,
+            appliance=recipe_db.appliance,
+            content=RecipeContent(**recipe_content),
+            created_at=recipe_db.created_at,
+        )
+
+        return response
+
+    except HTTPException:
+        raise
+    except ValueError as e:
+        logger.error(f"Validation error: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Unexpected error: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@app.get("/api/recipes", response_model=list[RecipeResponse])
+async def get_recipes(
+    skip: int = 0,
+    limit: int = 10,
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Retrieve recipe history (paginated, sorted by newest first).
+    
+    Args:
+        skip: Number of recipes to skip
+        limit: Maximum number of recipes to return
+        db: Database session
+        
+    Returns:
+        List of recipes from database
+    """
+    try:
+        stmt = select(Recipe).order_by(desc(Recipe.created_at)).offset(skip).limit(limit)
+        result = await db.execute(stmt)
+        recipes = result.scalars().all()
+
+        return [
+            RecipeResponse(
+                id=r.id,
+                ingredients=r.ingredients,
+                appliance=r.appliance,
+                content=RecipeContent(**r.content),
+                created_at=r.created_at,
+            )
+            for r in recipes
+        ]
+    except Exception as e:
+        logger.error(f"Error retrieving recipes: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@app.get("/")
+async def root():
+    """Serve frontend"""
+    return FileResponse("/app/frontend/index.html")
+
+
+@app.get("/health")
+async def health():
+    """Health check endpoint"""
+    return {"status": "ok"}
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
