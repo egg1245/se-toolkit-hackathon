@@ -1,15 +1,19 @@
-import os
 import logging
 from fastapi import FastAPI, Depends, HTTPException
-from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, desc
-import json
 
 from models import RecipeRequest, RecipeResponse, RecipeContent
 from database import init_db, close_db, get_db, Recipe
-from llm_service import LLMService
+
+# Try to import real LLM service, fallback to mock
+try:
+    from llm_service import LLMService
+    LLM_AVAILABLE = True
+except Exception:
+    from mock_llm_service import MockLLMService as LLMService
+    LLM_AVAILABLE = False
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -22,8 +26,9 @@ app = FastAPI(
     version="1.0.0",
 )
 
-# Initialize LLM service
+# Initialize LLM service with fallback to mock
 llm_service = LLMService()
+logger.info(f"LLM Service initialized: {'Real OpenAI' if LLM_AVAILABLE else 'Mock (testing mode)'}")
 
 
 @app.on_event("startup")
