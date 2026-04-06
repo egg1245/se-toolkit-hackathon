@@ -23,5 +23,5 @@ ENV PYTHONPATH=/app
 # Expose port
 EXPOSE 8000
 
-# Run directly using uvicorn with proper settings
-CMD ["python", "-m", "uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000", "--no-reload"]
+# Run directly using uvicorn with reload disabled 
+CMD ["python", "-m", "uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload=False"]
