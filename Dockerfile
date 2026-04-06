@@ -14,14 +14,11 @@ RUN pip install --no-cache-dir --upgrade pip && \
 COPY backend/ /app/backend/
 COPY frontend/ /app/frontend/
 
-# Set working directory to backend
-WORKDIR /app/backend
+# Set working directory to app root (for proper imports)
+WORKDIR /app
 
 # Expose port
 EXPOSE 8000
 
-# Run uvicorn
-CMD ["python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
-
-# Run uvicorn
-CMD ["python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Run uvicorn from app root directory
+CMD ["python", "-m", "uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]
