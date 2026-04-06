@@ -1,0 +1,176 @@
+DormChef Release Notes
+======================
+
+## Version 2.0.0
+Release Date: April 6, 2024
+Status: Production Ready ✅
+
+### New Features
+
+#### 1. Multi-Appliance Support
+- Generate recipes using multiple kitchen appliances simultaneously
+- API now accepts `appliance_ids` array instead of single `appliance` string
+- Recipes stored with many-to-many relationship to appliances
+- LLM considers all selected appliances in recipe generation
+
+#### 2. Custom Appliances Management
+- Users can add custom kitchen appliances with name and description
+- Full CRUD API endpoints for appliance management:
+  - GET /api/appliances - List all appliances
+  - POST /api/appliances - Create custom appliance
+  - PUT /api/appliances/{id} - Update appliance
+  - DELETE /api/appliances/{id} - Delete appliance
+- Built-in appliances protected (cannot be edited/deleted)
+- Real-time validation (no duplicate names allowed)
+- Admin UI for managing appliances with modals
+
+#### 3. Dark Mode / Light Theme
+- Theme toggle button in header (🌙/☀️)
+- Persistent theme preference via localStorage
+- CSS root variables for easy color switching
+- Optimized color scheme for both modes
+
+#### 4. Internationalization (i18n)
+- Full support for English and Russian languages
+- 100+ translated UI strings
+- Language toggle button in header (🌍)
+- Persistent language preference via localStorage
+- Easy to extend with additional languages
+
+#### 5. Enhanced LLM Integration
+- Improved system prompt for multi-appliance scenarios
+- Better recipe quality and formatting
+- Handles appliance constraints more intelligently
+- Fallback to mock service if API unavailable
+
+### Improvements
+
+- Frontend refactored with tabs for Generator and Appliances management
+- Multi-select appliance interface (checkboxes instead of dropdown)
+- Real-time appliance list updates
+- Better error messages and user feedback
+- Comprehensive test suite (30+ unit/integration tests)
+- Enhanced API documentation
+
+### Breaking Changes
+
+**⚠️ API v1.0 → v2.0 Migration**
+
+Old format (v1.0):
+```json
+POST /api/generate
+{
+  "ingredients": ["eggs"],
+  "appliance": "microwave"
+}
+
+Response:
+{
+  "appliance": "microwave",
+  "content": {...}
+}
+```
+
+New format (v2.0):
+```json
+POST /api/generate
+{
+  "ingredients": ["eggs"],
+  "appliance_ids": [1]
+}
+
+Response:
+  "appliances": [
+    {"id": 1, "name": "Microwave", "is_default": true, ...}
+  ],
+  "content": {...}
+}
+```
+
+### Database Changes
+
+- Added `Appliance` ORM model
+- Created `recipe_appliances` many-to-many junction table
+- Removed single `appliance` column from `Recipe` table
+- Seeded 6 default appliances: Microwave, Toaster, Hot Plate, Air Fryer, Oven, Blender
+
+### File Changes
+
+- **backend/main.py**: Version bumped to 2.0.0, 4 new CRUD endpoints
+- **backend/models.py**: Added Appliance Pydantic models, updated Recipe schemas
+- **backend/database.py**: Added Appliance ORM, many-to-many relationship
+- **backend/llm_service.py**: Enhanced prompts for multi-appliance support
+- **backend/mock_llm_service.py**: Updated mock service for testing
+- **frontend/index.html**: Complete UI refactor with tabs, modals, checkboxes
+- **frontend/translations.js**: NEW - 100+ strings in EN/RU
+- **backend/test_appliances.py**: NEW - 30+ test cases
+
+### New Files
+
+- `TESTING.md` - Comprehensive manual testing guide
+- `integration_test.sh` - Automated integration test script
+- `frontend/translations.js` - i18n translation files
+- `VERSION` - This release notes file
+
+### Known Limitations
+
+- Mock LLM service generates basic recipes (suitable for testing only)
+- Language support limited to EN/RU (can be extended)
+- No user authentication (all appliances are global)
+- No recipe sharing or export feature
+
+### Deployment
+
+For Ubuntu 24.04:
+```bash
+git clone https://github.com/egg1245/se-toolkit-hackathon
+cd se-toolkit-hackathon
+docker-compose up
+# Visit http://localhost:8000
+```
+
+### Testing
+
+Run automated tests:
+```bash
+bash integration_test.sh
+```
+
+Manual testing: Follow TESTING.md guide
+
+### Performance
+
+- Async operations throughout (FastAPI, SQLAlchemy)
+- Database query optimization with proper indexing
+- Frontend lazy loading of translations
+- localStorage for instant theme/language switching
+- 30s timeout on LLM API calls
+
+### Security
+
+- Input validation on all API endpoints
+- SQL injection prevention (parameterized queries)
+- CORS disabled (single-origin deployment)
+- No sensitive data in localStorage (only preferences)
+- Protected default appliances from modification
+
+### Backwards Compatibility
+
+❌ **NOT compatible with v1.0 clients**
+- API contract changed (appliance → appliance_ids)
+- Response schema changed (appliance → appliances array)
+- Frontend must be updated to use new API
+
+### Contributors
+
+- Developed for Lab 9 Hackathon
+- Innopolis University
+- Software Engineering Toolkit Course
+
+### License
+
+MIT License - See LICENSE file
+
+---
+
+**🍳 Happy Cooking with DormChef v2.0!**
