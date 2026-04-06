@@ -100,11 +100,20 @@ async def generate_recipe(
 
         logger.info(f"Recipe saved with ID: {recipe_db.id}")
 
-        # Convert to response model
+        # Convert to response model while session is still open
         response = RecipeResponse(
             id=recipe_db.id,
             ingredients=recipe_db.ingredients,
-            appliances=[ApplianceResponse.from_orm(a) for a in recipe_db.appliances],
+            appliances=[
+                ApplianceResponse(
+                    id=a.id,
+                    name=a.name,
+                    description=a.description,
+                    is_default=a.is_default,
+                    created_at=a.created_at,
+                )
+                for a in appliances
+            ],
             content=RecipeContent(**recipe_content),
             created_at=recipe_db.created_at,
         )
@@ -143,16 +152,35 @@ async def get_recipes(
         result = await db.execute(stmt)
         recipes = result.scalars().all()
 
-        return [
-            RecipeResponse(
-                id=r.id,
-                ingredients=r.ingredients,
-                appliances=[ApplianceResponse.from_orm(a) for a in r.appliances],
-                content=RecipeContent(**r.content),
-                created_at=r.created_at,
+        responses = []
+        for r in recipes:
+            # Fetch appliances for each recipe
+            app_result = await db.execute(
+                select(Appliance).where(
+                    Appliance.id.in_([a.id for a in r.appliances])
+                )
             )
-            for r in recipes
-        ]
+            recipe_appliances = app_result.scalars().all()
+            
+            responses.append(
+                RecipeResponse(
+                    id=r.id,
+                    ingredients=r.ingredients,
+                    appliances=[
+                        ApplianceResponse(
+                            id=a.id,
+                            name=a.name,
+                            description=a.description,
+                            is_default=a.is_default,
+                            created_at=a.created_at,
+                        )
+                        for a in recipe_appliances
+                    ],
+                    content=RecipeContent(**r.content),
+                    created_at=r.created_at,
+                )
+            )
+        return responses
     except Exception as e:
         logger.error(f"Error retrieving recipes: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
