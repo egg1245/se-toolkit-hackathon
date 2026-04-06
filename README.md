@@ -54,12 +54,24 @@ DormChef uses LLM agents to intelligently generate customized, actionable recipe
 ✅ Docker containerization (docker-compose)  
 ✅ Health checks and error handling  
 
-### Planned (Version 2)
+### Implemented (Version 2)
+✅ **Multi-Appliance Support**: Generate recipes using 1+ kitchen appliances  
+✅ **Custom Appliances Management**: Users can add/edit/delete custom appliances  
+✅ **Appliances CRUD API**: Full REST API for appliance management  
+✅ **Dark Mode / Light Theme**: Toggle with persistent localStorage  
+✅ **Internationalization (i18n)**: Support for English & Russian languages  
+✅ **Enhanced LLM Prompts**: Improved recipe quality and formatting  
+✅ **Comprehensive Test Suite**: 30+ unit & integration tests  
+✅ **Admin Dashboard**: Appliances management UI with real-time updates  
+
+### Planned (Version 3)
 📋 User authentication & favorites  
 📋 Recipe ratings & community features  
 📋 Export recipes (PDF/print)  
 📋 Advanced filtering (by difficulty, time, etc.)  
 📋 Mobile app version  
+📋 Recipe sharing via URL  
+📋 Dietary restrictions support  
 
 ## Usage
 
@@ -73,16 +85,69 @@ DormChef uses LLM agents to intelligently generate customized, actionable recipe
 
 ### API Endpoints
 
-**Generate Recipe:**
+#### Recipe Generation (Version 2)
+**Generate Recipe with Multiple Appliances:**
 ```bash
 curl -X POST http://localhost:8000/api/generate \
   -H "Content-Type: application/json" \
   -d '{
     "ingredients": ["eggs", "bread", "butter"],
-    "appliance": "toaster"
+    "appliance_ids": [1, 2]
   }'
 ```
 
+**Response:**
+```json
+{
+  "id": 1,
+  "ingredients": ["eggs", "bread", "butter"],
+  "content": {
+    "title": "Buttered Toast with Scrambled Eggs",
+    "steps": [...],
+    "time_minutes": 15,
+    "difficulty": "easy"
+  },
+  "appliances": [
+    {"id": 1, "name": "Toaster", "is_default": true},
+    {"id": 2, "name": "Microwave", "is_default": true}
+  ],
+  "created_at": "2024-04-06T12:30:45"
+}
+```
+
+#### Appliances Management (NEW in Version 2)
+
+**Get All Appliances:**
+```bash
+curl http://localhost:8000/api/appliances
+```
+
+**Create Custom Appliance:**
+```bash
+curl -X POST http://localhost:8000/api/appliances \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Air Fryer",
+    "description": "High-speed convection oven"
+  }'
+```
+
+**Update Appliance (custom only):**
+```bash
+curl -X PUT http://localhost:8000/api/appliances/7 \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Updated Name",
+    "description": "Updated description"
+  }'
+```
+
+**Delete Appliance (custom only):**
+```bash
+curl -X DELETE http://localhost:8000/api/appliances/7
+```
+
+#### Recipe History
 **Get Recipe History:**
 ```bash
 curl http://localhost:8000/api/recipes?skip=0&limit=10
@@ -93,7 +158,39 @@ curl http://localhost:8000/api/recipes?skip=0&limit=10
 curl http://localhost:8000/health
 ```
 
-## Deployment
+## New Features in Version 2
+
+### 1. Multi-Appliance Support
+- Generate recipes using multiple appliances simultaneously
+- Users can specify 1+ appliance IDs in API requests
+- Recipes now include array of appliances (not single appliance)
+
+### 2. Appliances Management UI
+- Dedicated "Appliances" tab for managing kitchen equipment
+- View built-in appliances (locked, cannot be edited)
+- Add custom appliances with name & description
+- Edit/delete user-created appliances
+- Real-time list updates via API
+
+### 3. Dark Mode / Light Theme
+- Toggle button in header (sun/moon icon)
+- Persistent preference saved to localStorage
+- CSS variables for easy theming
+- Dark mode optimized for eye comfort
+
+### 4. Internationalization (i18n)
+- Support for English and Russian
+- Language toggle in header (🌍 button)
+- All UI strings loaded from translations.js
+- Persistent language preference
+
+### 5. Enhanced LLM Prompts
+- Better system prompt for multi-appliance scenarios
+- Improved recipe quality and formatting
+- JSON response validation
+- Fallback to mock service if API fails
+
+
 
 ### Quick Start (Recommended for Ubuntu 24.04)
 
@@ -293,12 +390,51 @@ pytest
 }
 ```
 
+## Version History
+
+### v2.0 (Current - Phase 2)
+**Release Date:** April 2024  
+**Features:**
+- Multi-appliance recipe generation
+- Custom appliances CRUD
+- Dark/Light theme toggle
+- Russian & English internationalization
+- Enhanced LLM prompts
+- Comprehensive test suite (30+ tests)
+- Admin appliances management UI
+
+**Breaking Changes:**
+- Recipe API now uses `appliance_ids` (array) instead of `appliance` (string)
+- Response includes `appliances` array instead of single `appliance`
+
+### v1.0 (Phase 1 - Completed)
+**Release Date:** April 2024  
+**Features:**
+- Recipe generation via LLM
+- Single appliance per recipe
+- PostgreSQL persistence
+- Recipe history (paginated)
+- Health checks
+- Docker deployment
+- Basic input validation
+
 ## License
 
-MIT License - See LICENSE file for details
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## Author
+## Team
 
-Built for Lab 9 Hackathon - Software Engineering Toolkit  
-University: [Your University]  
-Email: [Your Email]
+**Created for:** Software Engineering Toolkit Course - Lab 9 Hackathon  
+**Institution:** Innopolis University  
+**Project Duration:** April 2024  
+
+## Support
+
+For issues, questions, or contributions:
+1. Check [AGENTS.md](AGENTS.md) for architecture details
+2. Review [.github/copilot-instructions.md](.github/copilot-instructions.md) for development guidelines
+3. Submit issues via GitHub Issues
+
+---
+
+**🍳 Happy Cooking with DormChef!** 🎓
