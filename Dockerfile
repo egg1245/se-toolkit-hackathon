@@ -17,14 +17,16 @@ COPY frontend/ /app/frontend/
 # Set working directory to app root (for proper imports)
 WORKDIR /app
 
-# Set PYTHONPATH to include app directory
-ENV PYTHONPATH=/app
+# Set PYTHONPATH and environment variables
+ENV PYTHONPATH=/app \
+    PYTHONUNBUFFERED=1 \
+    UVICORN_RELOAD=false
 
-# Create uvicorn config file
-RUN echo '[tool.uvicorn]\nreload = false' > /app/uvicorn.ini
+# Create startup script
+RUN echo '#!/bin/bash\nset -e\ncd /app\nexec python -c "from backend.main import app; import uvicorn; uvicorn.run(app, host=\"0.0.0.0\", port=8000, reload=False)"' > /startup.sh && chmod +x /startup.sh
 
 # Expose port
 EXPOSE 8000
 
-# Run with config
-CMD ["python", "-m", "uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Run startup script
+CMD ["/startup.sh"]
