@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 app = FastAPI(
     title="DormChef API",
     description="Generate personalized recipes based on ingredients and appliances",
-    version="1.0.0",
+    version="2.0.0",
 )
 
 # Initialize LLM service with fallback to mock
