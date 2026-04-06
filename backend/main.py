@@ -154,13 +154,22 @@ async def get_recipes(
 
         responses = []
         for r in recipes:
-            # Fetch appliances for each recipe
-            app_result = await db.execute(
-                select(Appliance).where(
-                    Appliance.id.in_([a.id for a in r.appliances])
+            # Manually query appliances for this recipe
+            from backend.database import recipe_appliances
+            app_ids_result = await db.execute(
+                select(recipe_appliances.c.appliance_id).where(
+                    recipe_appliances.c.recipe_id == r.id
                 )
             )
-            recipe_appliances = app_result.scalars().all()
+            app_ids = app_ids_result.scalars().all()
+            
+            if app_ids:
+                app_result = await db.execute(
+                    select(Appliance).where(Appliance.id.in_(app_ids))
+                )
+                recipe_appliances_list = app_result.scalars().all()
+            else:
+                recipe_appliances_list = []
             
             responses.append(
                 RecipeResponse(
@@ -174,7 +183,7 @@ async def get_recipes(
                             is_default=a.is_default,
                             created_at=a.created_at,
                         )
-                        for a in recipe_appliances
+                        for a in recipe_appliances_list
                     ],
                     content=RecipeContent(**r.content),
                     created_at=r.created_at,
