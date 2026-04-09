@@ -6,21 +6,17 @@ A full-stack web application that generates personalized recipes based on user-p
 
 ### Screenshots
 
-**Recipe Generator Interface:**
-```
-┌─────────────────────────────────────────┐
-│        🍳 DormChef - Recipe Generator   │
-├─────────────────────────────────────────┤
-│  Ingredients: eggs, bread, butter       │
-│  Appliance: [Toaster ▼]                │
-│  [Generate Recipe ✨] Button            │
-├─────────────────────────────────────────┤
-│  Recipe Title: Buttered Toast Surprise  │
-│  ⏱️ 5 min | 😊 Easy | 👥 1 serving     │
-│  Instructions: [1-5 steps]              │
-│  📋 Recent Recipes: [History]           │
-└─────────────────────────────────────────┘
-```
+**1. Recipe Generator Interface:**
+![Recipe Generator](screenshots/Generator.png)
+
+**2. Generated Recipe View:**
+![Generated Recipe](screenshots/Recipe.png)
+
+**3. Recipe History/Vault:**
+![Recipe History](screenshots/History.png)
+
+**4. Appliances Management:**
+![Appliances Management](screenshots/Appliances.png)
 
 ## Product Context
 
