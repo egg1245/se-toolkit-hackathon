@@ -4,8 +4,27 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🍳 DormChef - Recipe Generator</title>
+    <script>
+        console.log('🚀 HTML parsing started - Emergency Logger Active');
+        window.onerror = function(msg, url, line) { 
+            console.error('JS Error: ' + msg + ' at ' + url + ':' + line);
+            alert('❌ JS Error: ' + msg + ' at ' + url + ':' + line);
+            return true;
+        };
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        /* EMERGENCY FALLBACK - IF CDN FAILS */
+        .hidden { display: none !important; }
+        #appliancesContainer { display: block !important; min-height: 100px; border: 2px solid red; padding: 10px; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+        header { background: linear-gradient(to right, #f97316, #eab308); color: white; padding: 1rem; }
+        main { max-width: 56rem; margin: 0 auto; padding: 1rem; }
+        .card { background: white; border: 1px solid #e5e7eb; border-radius: 0.5rem; padding: 0.75rem; }
+        button { background: #f97316; color: white; padding: 0.5rem 1rem; border: none; border-radius: 0.5rem; cursor: pointer; }
+        button:hover { opacity: 0.9; }
+        input, select { padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.25rem; }
+        
         :root {
             --bg-primary: #ffffff;
             --bg-secondary: #f3f4f6;
@@ -90,7 +109,7 @@
             color: #fca5a5;
         }
 </head>
-<body>
+<body style="display: block !important; opacity: 1 !important; background: white !important;">
     <!-- Header -->
     <header class="bg-gradient-to-r from-orange-500 to-yellow-500 text-white p-4">
         <div class="max-w-4xl mx-auto flex justify-between items-center">
@@ -288,15 +307,29 @@
             appliances: [],
             recipes: [],
         };
-
-        // INIT
-        document.addEventListener('DOMContentLoaded', () => {
-            applyTheme();
-            updateLanguage();
-            setupEventListeners();
-            loadAppliances();
-            loadRecipes();
-        });
+        // INIT - Multiple triggers for max compatibility
+        function initApp() {
+            console.log('✅ initApp called - initializing DormChef');
+            try {
+                applyTheme();
+                updateLanguage();
+                setupEventListeners();
+                loadAppliances();
+                loadRecipes();
+                console.log('✅ DormChef initialized successfully');
+            } catch(e) {
+                console.error('❌ Init error:', e);
+                alert('Init Error: ' + e.message);
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', initApp);
+        window.addEventListener('load', initApp);
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initApp);
+        } else {
+            initApp();
+        }
 
         // THEME TOGGLE
         function toggleTheme() {
